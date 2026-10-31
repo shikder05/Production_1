@@ -1,0 +1,353 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cotton Club BD - Production Report</title>
+<style>
+:root{--bg:#f3f6fa;--card:#fff;--text:#172b27;--primary:#126b55;--muted:#718093;--border:#e4eaf0}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif}
+button,input,select{font:inherit}
+button{cursor:pointer;border:0;border-radius:8px;padding:10px 15px}
+.primary{background:var(--primary);color:white}
+.secondary{background:#e8efec;color:var(--text)}
+.danger{background:#ffe9e7;color:#b42318}
+.hidden{display:none!important}
+#loading{position:fixed;inset:0;background:var(--bg);display:grid;place-items:center;z-index:20;font-size:20px}
+.login-wrap{min-height:100vh;display:grid;place-items:center;padding:20px}
+.login-card{background:var(--card);width:min(420px,100%);padding:30px;border-radius:18px;box-shadow:0 10px 40px #0001}
+.logo{width:55px;height:55px;border-radius:15px;background:var(--primary);color:white;display:grid;place-items:center;font-size:23px;font-weight:bold}
+h1,h2,h3{margin-top:0}
+.login-card h1{margin-bottom:5px}
+.muted{color:var(--muted);font-size:13px}
+label{display:block;font-size:13px;font-weight:bold;margin:12px 0 6px}
+input,select{width:100%;padding:11px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text)}
+.login-card button{width:100%;margin-top:14px}
+.tabs{display:flex;gap:8px;margin:20px 0}
+.tabs button{flex:1;background:#edf1f3}
+.tabs button.active{background:var(--primary);color:white}
+.app{display:flex;min-height:100vh}
+.sidebar{width:235px;background:#102b27;color:white;padding:20px;flex-shrink:0}
+.sidebar h3{margin:8px 0 25px}
+.sidebar button{display:block;width:100%;text-align:left;margin:6px 0;background:transparent;color:#c5d8d1}
+.sidebar button.active,.sidebar button:hover{background:#245044;color:white}
+.sidebar .bottom{margin-top:35px;font-size:12px;color:#9db8ae}
+.main{flex:1;min-width:0;padding:25px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:22px}
+.topbar h2{margin:0}
+.user-info{font-size:13px;color:var(--muted)}
+.page{display:none}
+.page.active{display:block}
+.card{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:20px;margin-bottom:17px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}
+.stat strong{display:block;font-size:26px;margin-top:12px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.actions{display:flex;gap:8px;align-items:end;flex-wrap:wrap}
+.actions button{margin-top:12px}
+table{width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap}
+th,td{padding:11px;border-bottom:1px solid var(--border);text-align:left}
+th{background:var(--bg);font-size:11px;color:var(--muted)}
+.table-wrap{overflow:auto;margin-top:15px}
+.message{font-size:13px;color:var(--primary);min-height:18px}
+.message.error{color:#b42318}
+.badge{padding:4px 8px;border-radius:20px;background:#e6f6ef;color:#08744e;font-size:11px}
+.badge.pending{background:#fff4d8;color:#946200}
+.theme-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.theme-grid button{border:1px solid var(--border);background:var(--card);color:var(--text)}
+@media(max-width:800px){.app{display:block}.sidebar{width:100%;padding:12px}.sidebar h3{margin:5px 0 10px}.sidebar nav{display:flex;overflow:auto}.sidebar nav button{width:auto;white-space:nowrap}.sidebar .bottom{display:none}.main{padding:14px}.stats{grid-template-columns:1fr}.grid{grid-template-columns:1fr 1fr}.topbar{align-items:flex-start;flex-direction:column}}
+@media(max-width:480px){.grid{grid-template-columns:1fr}.theme-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<div id="loading">COTTON CLUB BD<br>Loading...</div>
+
+<section id="loginView" class="login-wrap hidden">
+ <div class="login-card">
+  <div class="logo">CC</div>
+  <p class="muted">COTTON CLUB BD LIMITED</p>
+  <h1>Production Portal</h1>
+  <p class="muted">Extended Part</p>
+  <div class="tabs">
+   <button id="loginTab" class="active" onclick="showAuth('login')">Login</button>
+   <button id="signupTab" onclick="showAuth('signup')">Staff Sign Up</button>
+  </div>
+  <form id="loginForm">
+   <label>Username</label><input id="loginUser" required>
+   <label>Password</label><input id="loginPass" type="password" required>
+   <button class="primary">Login</button>
+  </form>
+  <form id="signupForm" class="hidden">
+   <label>Choose Username</label><input id="newUser" required minlength="3">
+   <label>Create Password</label><input id="newPass" type="password" required minlength="6">
+   <button class="primary">Submit Request</button>
+  </form>
+  <p id="authMsg" class="message"></p>
+  <p class="muted">Staff accounts require Admin approval.</p>
+ </div>
+</section>
+
+<div id="appView" class="app hidden">
+ <aside class="sidebar">
+  <h3>◈ COTTON CLUB</h3>
+  <nav>
+   <button class="active" onclick="go('home',this)">▦ Overview</button>
+   <button onclick="go('entry',this)">＋ New Roll Entry</button>
+   <button onclick="go('search',this)">⌕ Data Search</button>
+   <button onclick="go('report',this)">▤ Daily Report</button>
+   <button onclick="go('themes',this)">◐ Color Theme</button>
+   <button id="userMenu" class="hidden" onclick="go('users',this)">♙ User Management</button>
+  </nav>
+  <div class="bottom">● Local Demo Mode</div>
+ </aside>
+
+ <main class="main">
+  <header class="topbar">
+   <div><p class="muted">EXTENDED PART</p><h2 id="pageTitle">Overview</h2></div>
+   <div class="actions"><span id="who" class="user-info"></span><button class="secondary" onclick="refresh()">Refresh</button><button class="danger" onclick="logout()">Logout</button></div>
+  </header>
+
+  <section id="home" class="page active">
+   <div class="card"><h2>Welcome to Production Dashboard</h2><p class="muted">Cotton Club BD Limited — Production Management System</p></div>
+   <div class="stats">
+    <div class="card stat">Today's Total Production<strong id="todayTotal">0.00 kg</strong></div>
+    <div class="card stat">Total Roll Entries<strong id="rollCount">0</strong></div>
+    <div class="card stat">Logged In As<strong id="roleName">Staff</strong></div>
+   </div>
+   <div class="card"><h3>Production Summary</h3><div id="programSummary">No production data available.</div></div>
+  </section>
+
+  <section id="entry" class="page">
+   <div class="card">
+    <h3>New Roll Entry</h3>
+    <form id="entryForm">
+     <div class="grid">
+      <div><label>Date</label><input type="date" id="eDate" required></div>
+      <div><label>Machine No</label><input id="eMachine" placeholder="Machine number" required></div>
+      <div><label>Shift</label><select id="eShift"><option>A</option><option>B</option><option>C</option></select></div>
+      <div><label>Program No</label><input id="eProgram" required></div>
+      <div><label>Roll No (Auto)</label><select id="eRoll"></select></div>
+      <div><label>Weight (Kg)</label><input type="number" id="eWeight" min="0.01" step="0.01" required></div>
+      <div><label>Condition</label><select id="eCondition"><option>OK</option><option>Hold up</option><option>Reject</option></select></div>
+     </div>
+     <div class="actions"><button class="primary">Save Data</button><button type="reset" class="secondary">Clear Form</button></div>
+    </form>
+    <p id="entryMsg" class="message"></p>
+   </div>
+   <div class="card"><h3>Recent Entries</h3><div class="table-wrap"><table><thead><tr><th>Date</th><th>Machine</th><th>Shift</th><th>Program</th><th>Roll</th><th>Weight</th><th>Condition</th><th>Action</th></tr></thead><tbody id="recentRows"></tbody></table></div></div>
+  </section>
+
+  <section id="search" class="page">
+   <div class="card">
+    <h3>Data Search</h3>
+    <div class="grid">
+     <div><label>Date</label><input type="date" id="sDate"></div>
+     <div><label>Machine No</label><input id="sMachine" placeholder="All machines"></div>
+     <div><label>Shift</label><select id="sShift"><option value="ALL">All</option><option>A</option><option>B</option><option>C</option></select></div>
+    </div>
+    <button class="primary" onclick="searchData()">Search</button>
+    <div class="table-wrap"><table><thead><tr><th>Date</th><th>Machine</th><th>Shift</th><th>Program</th><th>Roll</th><th>Weight</th><th>Condition</th><th>Entered By</th></tr></thead><tbody id="searchRows"></tbody></table></div>
+   </div>
+  </section>
+
+  <section id="report" class="page">
+   <div class="card">
+    <h3>Daily Production Report</h3>
+    <div class="grid">
+     <div><label>Date</label><input type="date" id="rDate"></div>
+     <div><label>Shift</label><select id="rShift"><option value="ALL">All Shifts</option><option>A</option><option>B</option><option>C</option></select></div>
+    </div>
+    <div class="actions"><button class="primary" onclick="dailyReport()">Load Report</button><button class="secondary" onclick="window.print()">Print</button></div>
+    <div class="table-wrap"><table><thead><tr><th>Machine</th><th>Shift</th><th>Program</th><th>Roll</th><th>Weight</th><th>Condition</th><th>Entered By</th></tr></thead><tbody id="reportRows"></tbody></table></div>
+    <h3 id="grandTotal">Grand Total: 0.00 Kg</h3>
+   </div>
+  </section>
+
+  <section id="themes" class="page">
+   <div class="card"><h3>Color Theme</h3><div class="theme-grid" id="themeGrid"></div></div>
+  </section>
+
+  <section id="users" class="page">
+   <div class="card">
+    <h3>Staff Approval & User Management</h3>
+    <div class="table-wrap"><table><thead><tr><th>Username</th><th>Status</th><th>Role</th><th>Action</th></tr></thead><tbody id="userRows"></tbody></table></div>
+    <p class="muted">Approve a request to allow that Staff account to use this browser's demo system.</p>
+   </div>
+  </section>
+ </main>
+</div>
+
+<script>
+const KEY="cottonClubDemoV1";
+const defaultDB={
+ users:[
+  {username:"admin",password:"Admin@123",role:"admin",status:"active"},
+  {username:"staff",password:"Staff@123",role:"staff",status:"active"}
+ ],
+ records:[]
+};
+let db=JSON.parse(localStorage.getItem(KEY)||"null")||defaultDB;
+let current=null;
+function save(){localStorage.setItem(KEY,JSON.stringify(db))}
+function today(){let d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function init(){
+ save();
+ document.getElementById("loading").classList.add("hidden");
+ document.getElementById("loginView").classList.remove("hidden");
+ document.getElementById("eDate").value=today();
+ document.getElementById("rDate").value=today();
+ document.getElementById("sDate").value=today();
+ renderThemes();
+}
+function showAuth(which){
+ let login=which==="login";
+ $("loginForm").classList.toggle("hidden",!login);
+ $("signupForm").classList.toggle("hidden",login);
+ $("loginTab").classList.toggle("active",login);
+ $("signupTab").classList.toggle("active",!login);
+ $("authMsg").textContent="";
+}
+function $(id){return document.getElementById(id)}
+$("loginForm").addEventListener("submit",e=>{
+ e.preventDefault();
+ let name=$("loginUser").value.trim().toLowerCase(),pass=$("loginPass").value;
+ let u=db.users.find(x=>x.username.toLowerCase()===name&&x.password===pass);
+ if(!u){$("authMsg").textContent="Invalid username or password.";return}
+ if(u.status!=="active"){$("authMsg").textContent="Your account is waiting for Admin approval.";return}
+ current=u;openApp();
+});
+$("signupForm").addEventListener("submit",e=>{
+ e.preventDefault();
+ let username=$("newUser").value.trim(),password=$("newPass").value;
+ if(db.users.some(x=>x.username.toLowerCase()===username.toLowerCase())){$("authMsg").textContent="Username already exists.";return}
+ db.users.push({username,password,role:"staff",status:"pending"});
+ save();$("signupForm").reset();
+ $("authMsg").textContent="Request submitted. Please wait for Admin approval.";
+});
+function openApp(){
+ $("loginView").classList.add("hidden");$("appView").classList.remove("hidden");
+ $("who").textContent=current.username+" ("+current.role+")";
+ $("roleName").textContent=current.role;
+ $("userMenu").classList.toggle("hidden",current.role!=="admin");
+ refresh();go("home",document.querySelector(".sidebar nav button"));
+}
+function logout(){current=null;$("appView").classList.add("hidden");$("loginView").classList.remove("hidden");$("loginForm").reset()}
+function go(id,btn){
+ document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));
+ $(id).classList.add("active");
+ document.querySelectorAll(".sidebar nav button").forEach(x=>x.classList.remove("active"));
+ if(btn)btn.classList.add("active");
+ $("pageTitle").textContent=({home:"Overview",entry:"New Roll Entry",search:"Data Search",report:"Daily Report",themes:"Color Theme",users:"User Management"})[id];
+ if(id==="users")renderUsers();
+ if(id==="entry")renderRecent();
+}
+function allowed(r){
+ if(current.role==="admin")return true;
+ return r.enteredBy===current.username;
+}
+function refresh(){
+ let records=db.records.filter(allowed),todayRows=records.filter(r=>r.date===today());
+ let total=todayRows.filter(r=>r.condition!=="Reject").reduce((a,r)=>a+Number(r.weight),0);
+ $("todayTotal").textContent=total.toFixed(2)+" kg";
+ $("rollCount").textContent=records.length;
+ let sums={};
+ todayRows.forEach(r=>sums[r.program]=(sums[r.program]||0)+Number(r.weight));
+ $("programSummary").innerHTML=Object.keys(sums).length?Object.entries(sums).map(([p,v])=>`<p>Program ${esc(p)}: <b>${v.toFixed(2)} kg</b></p>`).join(""):"No production data available.";
+ renderRecent();renderUsers();
+}
+function nextRoll(){
+ let date=$("eDate").value,machine=$("eMachine").value.trim(),shift=$("eShift").value;
+ let used=db.records.filter(r=>r.date===date&&r.machine===machine&&r.shift===shift).map(r=>r.roll);
+ let available=Array.from({length:10},(_,i)=>"R"+(i+1)).find(x=>!used.includes(x));
+ $("eRoll").innerHTML=available?`<option>${available}</option>`:"<option value=''>All 10 rolls used</option>";
+}
+["eDate","eMachine","eShift"].forEach(id=>$(id).addEventListener("change",nextRoll));
+$("eMachine").addEventListener("input",nextRoll);
+$("entryForm").addEventListener("submit",e=>{
+ e.preventDefault();
+ if(current.role!=="admin"&&current.permission==="ViewOnly"){ $("entryMsg").textContent="You do not have edit permission.";return}
+ nextRoll();
+ let roll=$("eRoll").value;
+ if(!roll){$("entryMsg").textContent="All 10 rolls are already used for this machine/date/shift.";return}
+ let record={
+  id:Date.now().toString(),date:$("eDate").value,machine:$("eMachine").value.trim(),
+  shift:$("eShift").value,program:$("eProgram").value.trim(),roll,
+  weight:Number($("eWeight").value),condition:$("eCondition").value,enteredBy:current.username
+ };
+ db.records.push(record);save();
+ $("entryMsg").textContent="Saved successfully: "+roll;
+ $("eWeight").value="";nextRoll();refresh();
+});
+function rowHTML(r,actions=false){
+ return `<tr><td>${esc(r.date)}</td><td>${esc(r.machine)}</td><td>${esc(r.shift)}</td><td>${esc(r.program)}</td><td>${esc(r.roll)}</td><td>${Number(r.weight).toFixed(2)}</td><td>${esc(r.condition)}</td><td>${esc(r.enteredBy)}</td>${actions?`<td><button class="secondary" onclick="editRecord('${r.id}')">Edit</button> <button class="danger" onclick="deleteRecord('${r.id}')">Delete</button></td>`:""}</tr>`;
+}
+function renderRecent(){
+ let rows=db.records.filter(allowed).slice(-15).reverse();
+ $("recentRows").innerHTML=rows.map(r=>rowHTML(r,true)).join("")||"<tr><td colspan='8'>No entries yet.</td></tr>";
+}
+function editRecord(id){
+ let r=db.records.find(x=>x.id===id);if(!r||!allowed(r))return;
+ let weight=prompt("Enter new weight (Kg):",r.weight);if(weight===null)return;
+ if(!Number.isFinite(Number(weight))||Number(weight)<=0){alert("Invalid weight");return}
+ let condition=prompt("Condition: OK, Hold up, Reject",r.condition);if(condition===null)return;
+ if(!["OK","Hold up","Reject"].includes(condition)){alert("Invalid condition");return}
+ r.weight=Number(weight);r.condition=condition;save();refresh();
+}
+function deleteRecord(id){
+ let r=db.records.find(x=>x.id===id);if(!r||!allowed(r))return;
+ if(!confirm("Delete this roll entry?"))return;
+ db.records=db.records.filter(x=>x.id!==id);save();refresh();nextRoll();
+}
+function searchData(){
+ let date=$("sDate").value,m=$("sMachine").value.trim(),s=$("sShift").value;
+ let rows=db.records.filter(r=>allowed(r)&&(!date||r.date===date)&&(!m||r.machine===m)&&(s==="ALL"||r.shift===s));
+ $("searchRows").innerHTML=rows.map(r=>rowHTML(r)).join("")||"<tr><td colspan='8'>No records found.</td></tr>";
+}
+function dailyReport(){
+ let date=$("rDate").value,shift=$("rShift").value;
+ let rows=db.records.filter(r=>allowed(r)&&r.date===date&&(shift==="ALL"||r.shift===shift));
+ rows.sort((a,b)=>a.machine.localeCompare(b.machine,undefined,{numeric:true})||a.shift.localeCompare(b.shift));
+ $("reportRows").innerHTML=rows.map(r=>rowHTML(r)).join("")||"<tr><td colspan='8'>No records found.</td></tr>";
+ let total=rows.filter(r=>r.condition!=="Reject").reduce((a,r)=>a+Number(r.weight),0);
+ $("grandTotal").textContent="Grand Total (excluding Reject): "+total.toFixed(2)+" Kg";
+}
+function renderUsers(){
+ if(!current||current.role!=="admin")return;
+ $("userRows").innerHTML=db.users.map((u,i)=>`<tr><td>${esc(u.username)}</td><td><span class="badge ${u.status==="pending"?"pending":""}">${esc(u.status)}</span></td><td>${esc(u.role)}</td><td>${u.role==="admin"?"—":u.status==="pending"?`<button class="primary" onclick="approveUser(${i})">Approve</button> <button class="danger" onclick="removeUser(${i})">Reject</button>`:`<button class="danger" onclick="removeUser(${i})">Delete</button>`}</td></tr>`).join("");
+}
+function approveUser(i){db.users[i].status="active";save();renderUsers()}
+function removeUser(i){if(!confirm("Remove this account?"))return;db.users.splice(i,1);save();renderUsers()}
+const themes=[
+ ["Default","#f3f6fa","#fff","#172b27","#126b55"],
+ ["Ocean","#eaf4fa","#fff","#17344b","#176b9b"],
+ ["Forest","#edf5ef","#fff","#1c392b","#28734a"],
+ ["Purple","#f3effa","#fff","#30264a","#7652a8"],
+ ["Rose","#fff0f2","#fff","#4c2932","#b84f70"],
+ ["Dark","#171c23","#252d38","#f1f5f9","#43a88a"],
+ ["Night","#101827","#1b2638","#edf2f7","#647eea"],
+ ["Coffee","#f5eee6","#fffaf4","#49372b","#9b6744"],
+ ["Gold","#faf5e7","#fffdf5","#493d20","#a78324"],
+ ["Blue","#eef3ff","#fff","#23345b","#4268c5"],
+ ["Mint","#eaf8f3","#fff","#17483c","#219879"],
+ ["Slate","#edf0f3","#fff","#283442","#536b83"],
+ ["Red","#fff0ed","#fff","#4c2522","#b84d40"],
+ ["Black","#171717","#252525","#f4f4f4","#777"]
+];
+function renderThemes(){
+ $("themeGrid").innerHTML=themes.map((t,i)=>`<button onclick="setTheme(${i})" style="border-left:9px solid ${t[4]}">${t[0]}</button>`).join("");
+}
+function setTheme(i){
+ let t=themes[i];document.documentElement.style.setProperty("--bg",t[1]);
+ document.documentElement.style.setProperty("--card",t[2]);
+ document.documentElement.style.setProperty("--text",t[3]);
+ document.documentElement.style.setProperty("--primary",t[4]);
+ localStorage.setItem("ccTheme",i);
+}
+function loadTheme(){let i=Number(localStorage.getItem("ccTheme"));if(Number.isInteger(i)&&themes[i])setTheme(i)}
+init();loadTheme();
+</script>
+</body>
+</html>
